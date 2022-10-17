@@ -45,6 +45,7 @@ resource "aws_vpc" "main" {
 # EKS will deploy load balancers in public subnet to manage inbound trafic which will be routed to our containerized microservices deployed in privae subnets.
 # so we will have a public and private subnets in one availability zone or data center. so 4 subnets in total. because we will need two data centers. 
 # next, we need to split up the ip addresses for the subnets to use. the cidr ip range we specified. 
+# data element is a way of querying the provider for information.
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -53,7 +54,6 @@ resource "aws_subnet" "public-subnet-a" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = var.public_subnet_a_cidr
   availability_zone = data.aws_availability_zones.available.names[0]
-  # data element is a way of querying the provider for information. 
   # terafform type: data : can help us choose the zone names dynamically.
 
   tags = {
@@ -71,7 +71,7 @@ resource "aws_subnet" "public-subnet-b" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = var.public_subnet_b_cidr
   availability_zone = data.aws_availability_zones.available.names[1]
-  #   we are using this to grab the availablity zone ids in the region we have specified
+  # we are using this to grab the availablity zone ids in the region we have specified
   # nice way to avoid hardcoding values into the module.
   # data element is a way of querying the provider for information.
 
@@ -151,7 +151,7 @@ resource "aws_route_table_association" "public-b-association" {
 }
 
 # configuring routing for our private subnets will be a bit challenging
-# we need to define a route from out private subnet to the internet to allow our kubernetes pods to talk to the EKS service 
+# we need to define a route from our private subnet to the internet to allow our kubernetes pods to talk to the EKS service 
 # for this to work, we need a way for our nodes in our private subnets to talk to the internet gateway we hv deployed in the public subnets. 
 # in aws, we need to create a network address translation (NAT) gateway resource.
 # the NAT will need a special kind of ip address called elastic ip address (EIP)
